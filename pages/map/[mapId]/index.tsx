@@ -1,6 +1,6 @@
 import { useState, useMemo, useCallback } from 'react';
 // import { flushSync } from 'react-dom';
-import { NextPage, NextPageContext } from 'next';
+import { GetServerSidePropsContext, NextPage, NextPageContext } from 'next';
 import Image from 'next/image';
 import Script from 'next/script';
 import { useRouter } from 'next/router';
@@ -11,7 +11,7 @@ import { CopyToClipboard } from 'react-copy-to-clipboard';
 import { Container, MapContainer, OverlayContainer } from '@/styles/Map';
 import MapHeader from '@/components/MapHeader';
 import { getMapDetailHelper, getMarkersHelper } from '@/query';
-import { createFavoriteMap, deleteFavoriteMap, getMapDetail, getMarkers, getPrivateCode } from '@/api';
+import { createFavoriteMap, deleteFavoriteMap, getMapDetail, getMarkers, getMe, getPrivateCode, setAccessToken } from '@/api';
 import { useMeState, useMapAccessible, useMapPlaceOverlayState } from '@/atoms';
 import { Path } from '@/constants';
 import PlaceListOverlay from '@/components/PlaceListOverlay';
@@ -162,12 +162,27 @@ const Map: NextPage<any> = props => {
     );
 };
 
-export const getServerSideProps = async (context: NextPageContext) => {
+export const getServerSideProps = async (context: GetServerSidePropsContext) => {
     // console.log('@@', context.query);
     // console.log('##', context.query.mapId);
+
     const mapId = Number(context.query.mapId);
 
     const [mapDetail, markers] = await Promise.all([getMapDetail({ mapId }), getMarkers({ mapId })]);
+
+    if (!context.req) {
+        return { props: { mapDetail, markers } };
+    }
+
+    const token = context.req?.cookies?.token;
+    console.log('###@@@', { token });
+    if (token) {
+        setAccessToken(token);
+        const me = await getMe();
+        console.log('##@@@', { me });
+        // const [myMaps, favoriteMaps, recentMaps] = await Promise.all([getMaps(), getFavoriteMaps(), getRecentMaps()]);
+        return { props: { me, mapDetail, markers } };
+    }
     // const [mapDetail, markers] = await Promise.all([getMapDetail({ mapId: 235 }), getMarkers({ mapId: 235 })]);
 
     return { props: { mapDetail, markers } };

@@ -1,13 +1,18 @@
 import { useCallback } from 'react';
-import type { NextPage, NextPageContext } from 'next';
+import type { GetServerSidePropsContext, NextPage, NextPageContext } from 'next';
 import Image from 'next/image';
 import { useRouter } from 'next/router';
+import { dehydrate, QueryClient, useQuery } from 'react-query';
+import { useHydrateAtoms } from 'jotai/utils';
 
 import { getMaps, getFavoriteMaps, getRecentMaps } from '@/api/map';
 import { Main, Top, User, Container, Header, Maps, NewBtn, RecentMap, MapArea, MapChip, EmptySpace, MapSpace, ContentSpace } from '@/styles/Home';
 import { useMeState } from '@/atoms';
 import { Path } from '@/constants';
 import MapCard from '@/components/MapCard';
+import { getMe, GetMeResponse, setAccessToken } from '@/api';
+import { queryClient } from '@/query';
+import Icon from '@/components/Icon';
 
 import mypage from '@/assets/home/ic_mypage.png';
 import userImg from '@/assets/home/img_my@3x.png';
@@ -16,12 +21,25 @@ import greyarrow from '@/assets/home/ic_arrow_next.png';
 import empty from '@/assets/home/img_empty.png';
 import newbtn from '@/assets/home/btn_newmap.png';
 
-const Home: NextPage<{ myMaps: any[]; favoriteMaps: any[]; recentMaps: any[] }> = ({ myMaps, favoriteMaps, recentMaps }) => {
-    const { me } = useMeState();
-    console.log({ me });
+const me = {
+    id: 50,
+    nickname: '백인재z',
+    thumbnail: 'http://k.kakaocdn.net/dn/CKOTn/btrfEm77yMD/0yeOb5spzcu4Edr1c6bwHk/img_110x110.jpg'
+};
+// const myMaps = [];
+// const recentMaps = [];
+// const favoriteMaps = [];
+const Home: NextPage = () => {
+    // const { me } = useMeState();
 
     const router = useRouter();
 
+    // const { data: me } = useQuery<GetMeResponse>(['me'], getMe);
+    // console.log('@@READLD', { me });
+    const { data: myMaps, isLoading: isMapLoading } = useQuery(['getMaps'], () => getMaps());
+    const { data: favoriteMaps, isLoading: isFavoriteLoading } = useQuery(['getFavoriteMap'], () => getFavoriteMaps());
+    const { data: recentMaps, isLoading: isRecentLoading } = useQuery(['getRecentMaps'], () => getRecentMaps());
+    // console.log('@#@@@@@######', { myMaps, favoriteMaps, recentMaps });
     const onMoreMapClick = useCallback((type: 'my' | 'favorite' | 'recent') => {}, []);
 
     const onGoMyPageClick = useCallback(() => {
@@ -36,7 +54,7 @@ const Home: NextPage<{ myMaps: any[]; favoriteMaps: any[]; recentMaps: any[] }> 
         router.push(`${Path.myMap}/${id}`);
     }, []);
 
-    if (!me) {
+    if (!me || !recentMaps) {
         return <></>;
     }
 
@@ -50,7 +68,7 @@ const Home: NextPage<{ myMaps: any[]; favoriteMaps: any[]; recentMaps: any[] }> 
                     </Header>
 
                     <User>
-                        <img width={46} height={46} className='user-img' src={me.thumbnail} />
+                        <Icon width={46} height={46} className='user-img' src={me.thumbnail} />
                         {me.nickname}님 안녕하세요!
                     </User>
 
@@ -59,17 +77,17 @@ const Home: NextPage<{ myMaps: any[]; favoriteMaps: any[]; recentMaps: any[] }> 
                             <div className='title'>최근 본 지도</div>
                             <div className='more-map'>
                                 <span>더 보기</span>
-                                <Image width={18} height={18} src={skyarrow} onClick={() => onMoreMapClick('recent')} />
+                                <Icon width={18} height={18} src={skyarrow.src} onClick={() => onMoreMapClick('recent')} />
                             </div>
                         </div>
                         <MapArea>
-                            {/* {!props.recentMaps && !isRecentLoading && <div className='no-recent-map'>최근 본 지도가 없습니다.</div>}
-                            {isRecentLoading && <Loading />} */}
+                            {/* {!recentMaps && !isRecentLoading && <div className='no-recent-map'>최근 본 지도가 없습니다.</div>}
+                            {isRecentLoading && <Loading />}
                             {recentMaps?.map((map, idx) => (
                                 <MapChip key={idx} onClick={() => onRecentMapClick(map)}>
                                     {map.mapName}
                                 </MapChip>
-                            ))}
+                            ))} */}
                         </MapArea>
                     </RecentMap>
                 </Top>
@@ -85,7 +103,7 @@ const Home: NextPage<{ myMaps: any[]; favoriteMaps: any[]; recentMaps: any[] }> 
                     </EmptySpace>
                 ) : (
                     <MapSpace>
-                        {myMaps && myMaps.length !== 0 && (
+                        {/* {myMaps && myMaps.length !== 0 && (
                             <Maps>
                                 <div className='title-area'>
                                     <span className='title'>내가 만든 map</span>
@@ -100,8 +118,8 @@ const Home: NextPage<{ myMaps: any[]; favoriteMaps: any[]; recentMaps: any[] }> 
                                     ))}
                                 </div>
                             </Maps>
-                        )}
-                        {favoriteMaps && favoriteMaps?.length !== 0 && (
+                        )} */}
+                        {/* {favoriteMaps && favoriteMaps?.length !== 0 && (
                             <Maps>
                                 <div className='title-area'>
                                     <span className='title'>즐겨찾는 map</span>
@@ -116,7 +134,7 @@ const Home: NextPage<{ myMaps: any[]; favoriteMaps: any[]; recentMaps: any[] }> 
                                     ))}
                                 </div>
                             </Maps>
-                        )}
+                        )} */}
                     </MapSpace>
                 )}
                 <NewBtn onClick={() => router.push(Path.newMap)}>
@@ -127,11 +145,30 @@ const Home: NextPage<{ myMaps: any[]; favoriteMaps: any[]; recentMaps: any[] }> 
     );
 };
 
-export const getServerSideProps = async () => {
-    const [myMaps, favoriteMaps, recentMaps] = await Promise.all([getMaps(), getFavoriteMaps(), getRecentMaps()]);
-    console.log([myMaps, favoriteMaps, recentMaps]);
-    return { props: { myMaps, favoriteMaps, recentMaps } };
-    // return { props: { myMaps: [], favoriteMaps: [], recentMaps: [] } };
+// export const getStaticProps = async () => {
+//     return {
+//         props: {
+//             dehydratedState: JSON.parse(JSON.stringify(dehydrate(queryClient)))
+//         }
+//     };
+// };
+
+export const getServerSideProps = async (context: GetServerSidePropsContext) => {
+    // export const getStaticProps = async (context: GetServerSidePropsContext) => {
+    const token = context.req?.cookies.token;
+    // console.log({ token });
+    if (token) {
+        setAccessToken(token);
+        // const me = await getMe();
+
+        // queryClient.prefetchQuery<GetMeResponse>(['me'], me)
+        // queryClient.setQueryData(['me'], me);
+
+        // return { props: { dehydratedState: dehydrate(queryClient) } };
+    }
+
+    // return { redirect: { permanent: false, destination: '/login' } };
+    return { props: {} };
 };
 
 export default Home;

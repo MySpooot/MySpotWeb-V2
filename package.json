@@ -6,11 +6,13 @@
         "dev": "next dev",
         "build": "next build",
         "start": "next start",
-        "lint": "next lint"
+        "lint": "next lint",
+        "deploy": "serverless"
     },
     "dependencies": {
         "@emotion/react": "^11.9.0",
         "@emotion/styled": "^11.8.1",
+        "@next/env": "^12.1.6",
         "@rodmg/react-div-100vh": "^0.3.5",
         "@sentry/react": "^6.19.7",
         "@sentry/tracing": "^6.19.7",
@@ -29,6 +31,13 @@
         "reactjs-popup": "^2.0.5"
     },
     "devDependencies": {
+        "@serverless/aws-iam-role": "^1.0.0",
+        "@sls-next/aws-cloudfront": "^3.7.0",
+        "@sls-next/aws-lambda": "^3.7.0",
+        "@sls-next/aws-s3": "^3.7.0",
+        "@sls-next/aws-sqs": "^3.7.0",
+        "@sls-next/domain": "^3.7.0",
+        "@sls-next/serverless-component": "^3.7.0",
         "@svgr/webpack": "^6.2.1",
         "@types/node": "17.0.31",
         "@types/react": "18.0.9",
@@ -37,6 +46,8 @@
         "eslint-config-next": "12.1.6",
         "eslint-plugin-prettier": "^4.0.0",
         "prettier": "^2.6.2",
+        "ramda": "^0.28.0",
+        "serverless": "2.72.2",
         "typescript": "4.6.4"
     },
     "packageManager": "yarn@3.2.0"

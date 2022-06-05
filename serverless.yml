@@ -1,0 +1,21 @@
+# serverless.yml
+MySpotWeb:
+    # component: '@sls-next/serverless-component'
+    component: './.yarn/cache/@sls-next-serverless-component-npm-3.7.0-3227afb2f1-f269532bb8.zip/node_modules/@sls-next/serverless-component'
+    inputs:
+        name:
+            defaultLambda: DefaultLambda #Default Lambda의 이름 설정
+            imageLambda: ImageLambda # Image Lambda의 이름 설정
+        bucketRegion: 'ap-northeast-2' # S3 Bucket 지역 설정
+        bucketName: '8uu96c-34dvn9i'
+        cloudfront:
+            distributionId: 'E122LYLBC1S0T4',
+            comment: 'serverless next test' # CloudFront 설명 설정
+        build:
+            cmd: 'next'
+            env:
+                NEXT_PUBLIC_KAKAO_KEY: c34a01220cfe2ae7bfad959d689d95b9
+                NEXT_PUBLIC_SENTRY_DSN: https://ec1a1a5a45d043d69e0890f2363a7271@o1186033.ingest.sentry.io/6306019
+                NEXT_PUBLIC_GA: UA-212010117-1
+                NEXT_PUBLIC_SLACK_WEBHOOK: https://hooks.slack.com/services/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
+                NEXT_PUBLIC_NPM_AUTH_TOKEN: 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
